@@ -41,15 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 refCode = cleanName + randomNum;
             } else {
                 // KODE ASLI UNTUK PRODUCTION (Kirim ke Google Sheets)
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                                const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(data)
                 });
+
 
                 const result = await response.json();
                 if (result.status === 'success') {
