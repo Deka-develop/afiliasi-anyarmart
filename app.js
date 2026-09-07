@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const affiliateLinkInput = document.getElementById('affiliateLink');
     const copyBtn = document.getElementById('copyBtn');
 
-    // GANTI URL INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA NANTINYA
+    // URL Web App Google Script Anda
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdLmmXnkcim76HnHVrON8rzCD28lb2lfC4h2LVKJC62g93OJkO5NDVOL78SluIGdVM/exec';
 
     form.addEventListener('submit', async (e) => {
@@ -15,79 +15,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Ambil data dari form
         const formData = new FormData(form);
+        const nameVal = formData.get('name');
+        
+        // 2. Generate refCode di Frontend (Bypass CORS blocker)
+        const cleanName = nameVal.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 4).padEnd(4, 'X');
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        const refCode = cleanName + randomNum;
+
         const data = {
-            name: formData.get('name'),
+            name: nameVal,
             phone: formData.get('phone'),
-            bank: formData.get('bank')
+            bank: formData.get('bank'),
+            refCode: refCode
         };
 
-        // 2. Ubah tampilan tombol jadi loading
+        // 3. Ubah tampilan tombol jadi loading
         btnText.classList.add('hidden');
         loader.classList.remove('hidden');
         submitBtn.disabled = true;
 
         try {
-            // Karena ini adalah contoh simulasi, kita pakai URL dummy atau mode simulasi
-            // Jika GOOGLE_SCRIPT_URL belum diganti, kita simulasi saja dulu:
-            let refCode = "";
+            // Gunakan mode no-cors agar browser tidak memblokir redirect 302 dari Google Apps Script
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(data)
+            });
 
-            if (GOOGLE_SCRIPT_URL.includes('AKfycb...')) {
-                // SIMULASI LOKAL (Jika belum di-deploy ke Apps Script)
-                await new Promise(r => setTimeout(r, 1500)); // pura-pura loading
-
-                // Buat kode unik dari nama
-                const cleanName = data.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 5);
-                const randomNum = Math.floor(100 + Math.random() * 900);
-                refCode = cleanName + randomNum;
-            } else {
-                // KODE ASLI UNTUK PRODUCTION (Kirim ke Google Sheets)
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                if (result.status === 'success') {
-                    refCode = result.refCode;
-                } else {
-                    throw new Error('Gagal mendaftar');
-                }
-            }
-
-            // 3. Tampilkan hasil
+            // Karena no-cors tidak bisa membaca respon, kita asumsikan sukses jika tidak ada error jaringan
             form.classList.add('hidden');
             resultSection.classList.remove('hidden');
 
-            // Generate link afiliasi
-            // Asumsi domain utama adalah www.anyarmart.com
             const baseUrl = 'https://www.anyarmart.com/p/buku-diabetes.html';
-            affiliateLinkInput.value = `${baseUrl}?ref=${refCode}`;
+            affiliateLinkInput.value = baseUrl + '?ref=' + refCode;
 
         } catch (error) {
-            alert("Terjadi kesalahan saat mendaftar. Pastikan koneksi internet Anda stabil.");
+            alert('Terjadi kesalahan koneksi internet. Silakan coba lagi.');
             console.error(error);
-
-            // Kembalikan tombol
             btnText.classList.remove('hidden');
             loader.classList.add('hidden');
             submitBtn.disabled = false;
         }
     });
 
-    // Fitur Copy Link
     copyBtn.addEventListener('click', () => {
         affiliateLinkInput.select();
         document.execCommand('copy');
-
         const originalText = copyBtn.innerText;
         copyBtn.innerText = 'Tersalin!';
         copyBtn.style.backgroundColor = 'var(--success)';
-
         setTimeout(() => {
             copyBtn.innerText = originalText;
             copyBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
