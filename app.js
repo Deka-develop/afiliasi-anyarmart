@@ -41,11 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 refCode = cleanName + randomNum;
             } else {
                 // KODE ASLI UNTUK PRODUCTION (Kirim ke Google Sheets)
-                                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify(data)
                 });
-
 
                 const result = await response.json();
                 if (result.status === 'success') {
@@ -61,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Generate link afiliasi
             // Asumsi domain utama adalah www.anyarmart.com
-            const baseUrl = 'https://www.anyarmart.com/p/buku-panduan-sembuh-dari-diabetes.html';
+            const baseUrl = 'https://www.anyarmart.com/p/buku-diabetes.html';
             affiliateLinkInput.value = `${baseUrl}?ref=${refCode}`;
 
         } catch (error) {
